@@ -2,17 +2,6 @@
 
 <br/>
 
-Download images from AWS can be extremely slow!
-
-<br/>
-
-```
-Download redirected to host: vagrantcloud-files-production.s3.amazonaws.com
-Progress: 7% (Rate: 324k/s, Estimated time remaining: 1:26:17)
-```
-
-<br/>
-
 ### On Host (with linux)
 
 <br/>
