@@ -42,7 +42,8 @@ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - >/
 apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main" >/dev/null 2>&1
 
 echo "[TASK 7] Install Kubernetes components (kubeadm, kubelet and kubectl)"
-apt install -qq -y kubeadm=1.20.0-00 kubelet=1.20.0-00 kubectl=1.20.0-00 >/dev/null 2>&1
+#apt install -qq -y kubeadm=1.20.0-00 kubelet=1.20.0-00 kubectl=1.20.0-00 >/dev/null 2>&1
+apt install -qq -y kubeadm kubelet kubectl >/dev/null 2>&1
 
 echo "[TASK 8] Enable ssh password authentication"
 sed -i 's/^PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
@@ -55,7 +56,7 @@ echo "export TERM=xterm" >> /etc/bash.bashrc
 
 echo "[TASK 10] Update /etc/hosts file"
 cat >>/etc/hosts<<EOF
-172.16.16.100   kmaster.example.com     kmaster
-172.16.16.101   kworker1.example.com    kworker1
-172.16.16.102   kworker2.example.com    kworker2
+192.168.0.10 master.k8s master
+192.168.0.11 node1.k8s node1
+192.168.0.12 node2.k8s node2
 EOF
