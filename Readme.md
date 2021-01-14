@@ -199,7 +199,7 @@ Should work
 
 ```
 http://node1.k8s:30123
-http://node1.k8s:30123
+http://node2.k8s:30123
 ```
 
 <br/>
