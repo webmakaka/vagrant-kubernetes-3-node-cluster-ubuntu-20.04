@@ -125,7 +125,7 @@ etcd-0               Healthy     {"health":"true"}
 
 <br/>
 
-## Possible check
+## Possible checks
 
 <br/>
 
@@ -207,6 +207,269 @@ http://node2.k8s:30123
     // Delete created resources
     // $ kubectl delete svc nodejs-cats-app-nodeport
     // $ kubectl delete deployment nodejs-cats-app
+
+<br/>
+
+## Metal LB
+
+<br/>
+
+https://www.youtube.com/watch?v=2SmYjj-GFnE
+
+<br/>
+
+https://metallb.universe.tf/installation/
+
+<br/>
+
+    $ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml
+
+    $ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
+
+    # On first install only
+    $ kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+
+<br/>
+
+```
+$ cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - 192.168.0.21-192.168.0.50
+EOF
+```
+
+<br/>
+
+```
+$ kubectl get pods -n metallb-system
+NAME                          READY   STATUS    RESTARTS   AGE
+controller-65db86ddc6-glpk9   1/1     Running   0          2m7s
+speaker-26rbj                 1/1     Running   0          2m7s
+speaker-7485w                 1/1     Running   0          2m7s
+speaker-mvdnb                 1/1     Running   0          2m7s
+```
+
+<br/>
+
+```
+$ cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cats-app-deployment
+  labels:
+    app: cats-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cats-app
+  template:
+    metadata:
+      labels:
+        app: cats-app
+    spec:
+      containers:
+      - name: cats-app
+        image: webmakaka/cats-app:latest
+        ports:
+        - containerPort: 8080
+EOF
+```
+
+<br/>
+
+```
+$ kubectl expose deploy cats-app --port 80 --target-port 8080 --type LoadBalancer
+```
+
+<br/>
+
+```
+$ kubectl get svc
+NAME         TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)        AGE
+cats-app     LoadBalancer   10.98.196.136   192.168.0.21   80:30520/TCP   5s
+kubernetes   ClusterIP      10.96.0.1       <none>         443/TCP        86m
+```
+
+<br/>
+
+http://192.168.0.21/  
+OK!
+
+## Kubernetes ingress
+
+<br/>
+
+https://www.youtube.com/watch?v=UvwtALIb2U8
+
+<br/>
+
+https://kubernetes.github.io/ingress-nginx/deploy/
+
+<br/>
+
+### Helm3 install
+
+    $ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+    $ helm version --short --client
+    v3.4.2+g23dd3af
+
+<br/>
+
+    $ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+    $ helm repo update
+
+<br/>
+
+    $ kubectl create ns ingress-nginx
+
+    $ helm show values ingress-nginx/ingress-nginx > /tmp/ingress-nginx.yaml
+
+    $ vi /tmp/ingress-nginx.yaml +54
+
+```
+hostNetwork: true
+
+****
+
+  hostPort:
+    enabled: true
+
+```
+
+<br/>
+
+    $ vi /tmp/ingress-nginx.yaml +144
+
+```
+   kind: Deployment
+```
+
+<br/>
+
+```
+   kind: DaemonSet
+```
+
+<br/>
+
+```
+$ helm install ingress-nginx \
+  ingress-nginx/ingress-nginx \
+  -n ingress-nginx \
+  --values /tmp/ingress-nginx.yaml
+```
+
+<br/>
+
+```
+$ helm list -n ingress-nginx
+NAME         	NAMESPACE    	REVISION	UPDATED                                	STATUS  	CHART               	APP VERSION
+ingress-nginx	ingress-nginx	1       	2021-01-14 16:39:12.652014803 +0300 MSK	deployed	ingress-nginx-3.20.1	0.43.0
+```
+
+<br/>
+
+```
+$ kubectl  get all
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/cats-app-595964467d-bx2l8   1/1     Running   0          16m
+pod/cats-app-595964467d-j5qwq   1/1     Running   0          16m
+pod/cats-app-595964467d-rgqrr   1/1     Running   0          16m
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)        AGE
+service/cats-app     LoadBalancer   10.101.35.242   192.168.0.21   80:30570/TCP   15m
+service/kubernetes   ClusterIP      10.96.0.1       <none>         443/TCP        43m
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/cats-app   3/3     3            3           16m
+
+NAME                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/cats-app-595964467d   3         3         3       16m
+```
+
+<br/>
+
+```
+$ cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-cats-app
+spec:
+  rules:
+  - host: cats.app
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cats-app-deployment
+            port:
+              number: 80
+EOF
+```
+
+<br/>
+
+```
+$ kubectl get ing
+NAME               CLASS    HOSTS      ADDRESS   PORTS   AGE
+ingress-cats-app   <none>   cats.app             80      52s
+```
+
+<br/>
+
+    $ kubectl -n ingress-nginx get all
+
+```
+$ kubectl -n ingress-nginx get all
+NAME                                 READY   STATUS    RESTARTS   AGE
+pod/ingress-nginx-controller-g6b8d   1/1     Running   0          14m
+pod/ingress-nginx-controller-kfj5d   1/1     Running   0          14m
+
+NAME                                         TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)                      AGE
+service/ingress-nginx-controller             LoadBalancer   10.109.73.155   192.168.0.22   80:31143/TCP,443:32332/TCP   14m
+service/ingress-nginx-controller-admission   ClusterIP      10.105.83.58    <none>         443/TCP                      14m
+
+NAME                                      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+daemonset.apps/ingress-nginx-controller   2         2         2       2            2           kubernetes.io/os=linux   14m
+
+```
+
+<br/>
+
+Add EXTERNAL-IP to hosts file
+
+<br/>
+
+    $ sudo vi /etc/hosts
+
+```
+***
+192.168.0.22 cats.app
+
+```
+
+<br/>
+
+chrome browser: cats.app
+
+type: thisisunsafe in the browser window with security warning.
 
 <br/>
 <br/>
