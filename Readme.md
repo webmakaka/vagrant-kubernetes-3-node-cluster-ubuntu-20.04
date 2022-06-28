@@ -1,5 +1,10 @@
 # Vagrant kubernetes 3 node cluster with ubuntu 20.04
 
+
+<br/>
+Upd. New version. Didn't check yet
+https://www.youtube.com/watch?v=2aJSAzLW6fg
+
 <br/>
 
 ### On Host (with linux)
