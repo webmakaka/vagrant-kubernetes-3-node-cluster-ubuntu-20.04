@@ -2,8 +2,12 @@
 
 
 <br/>
-Upd. New version. Didn't check yet
+Upd1. New version. Didn't check yet
 https://www.youtube.com/watch?v=2aJSAzLW6fg
+
+<br/>
+Upd2. New version. Didn't check yet
+https://www.youtube.com/watch?v=dwm1j_fKICU
 
 <br/>
 
