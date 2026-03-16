@@ -499,13 +499,10 @@ https://github.com/justmeandopensource/kubernetes
 **How to run original:**  
 https://www.youtube.com/watch?v=AoEWX84h_ig
 
-<br/>
+<br/><br/>
 
 ---
 
 <br/>
 
-**Marley**
-
-Any questions in english: <a href="https://jsdev.org/chat/">Telegram Chat</a>  
-Любые вопросы на русском: <a href="https://jsdev.ru/chat/">Телеграм чат</a>
+<a href="https://k8s.ru/">Предложить инженеру работу / подработку на проекте с kubernetes, microservices, machine learning, big data, golang</a>
